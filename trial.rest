@@ -1,0 +1,13 @@
+
+
+###
+
+POST http://localhost:5000/send-sms
+application/json
+
+{
+  "to": "+254799590711",
+  "message": "Hello, this is a test message!"
+}
+
+###
