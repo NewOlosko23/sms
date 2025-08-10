@@ -16,6 +16,13 @@ const at = africastalking({
 });
 const sms = at.SMS;
 
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Welcome to the SMS API",
+  });
+});
+
 // Send SMS endpoint
 app.post("/send-sms", async (req, res) => {
   const { to, message } = req.body;
