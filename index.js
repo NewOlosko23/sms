@@ -1,53 +1,43 @@
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
-import bodyParser from "body-parser";
-import africastalking from "africastalking";
+import { connectDB } from "./config/db.js";
+import authRoutes from "./routes/auth.js";
+import staffRoutes from "./routes/staff.js";
+import bookingRoutes from "./routes/bookings.js";
+import errorHandler from "./middlewares/errorHandler.js";
+import morgan from "morgan";
+import { protect, adminOnly } from "./middlewares/auth.js";
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
 
-const at = africastalking({
-  apiKey: process.env.AFRICASTALKING_API_KEY,
-  username: process.env.AFRICASTALKING_USERNAME,
-});
-const sms = at.SMS;
+// middleware
+app.use(express.json());
+if (process.env.NODE_ENV !== "production") app.use(morgan("dev"));
 
-app.get("/", (req, res) => {
+// routes
+app.use("/api/auth", authRoutes);
+app.use("/api/staff", staffRoutes);
+app.use("/api/bookings", bookingRoutes);
+
+// example dashboard route
+app.get("/api/dashboard", protect, adminOnly, (req, res) => {
   res.json({
     success: true,
-    message: "Welcome to the SMS API",
+    message: "Welcome to admin dashboard",
+    user: req.user,
   });
 });
 
-// Send SMS endpoint
-app.post("/send-sms", async (req, res) => {
-  const { to, message } = req.body;
+// error handler (last)
+app.use(errorHandler);
 
-  if (!to || !message) {
-    return res.status(400).json({
-      success: false,
-      message: "Phone number and message are required",
-    });
-  }
+// start server
+const PORT = process.env.PORT || 5000;
+const start = async () => {
+  await connectDB(process.env.MONGO_URI || "mongodb://localhost:27017/lamasha");
+  app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+};
 
-  try {
-    const result = await sms.send({
-      to,
-      message,
-      from: "",
-    });
-
-    res.json({ success: true, result });
-  } catch (error) {
-    console.error("SMS error:", error);
-    res.status(500).json({ success: false, message: "Failed to send SMS" });
-  }
-});
-
-app.listen(process.env.PORT, () => {
-  console.log(`✅ SMS server running on port ${process.env.PORT}`);
-});
+start();
