@@ -30,6 +30,13 @@ app.get("/api/dashboard", protect, adminOnly, (req, res) => {
   });
 });
 
+app.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "Welcome to Lamasha API",
+  });
+});
+
 // error handler (last)
 app.use(errorHandler);
 
